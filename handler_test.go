@@ -1,4 +1,4 @@
-package nameservice
+package nameservicetest
 
 import (
 	"strings"
@@ -11,10 +11,13 @@ import (
 
 var (
 	tokenName = "stake"
+	ctx       sdk.Context
+	handler   sdk.Handler
+	buyerAcc  sdk.AccAddress
 )
 
 func TestBasicMsgs(t *testing.T) {
-	ctx, handler := CreateTestHandler()
+	ctx, buyerAcc, handler = CreateTestHandler(t)
 	//Unrecognized type
 	res, err := handler(ctx, sdk.NewTestMsg())
 	require.Error(t, err)
@@ -23,16 +26,10 @@ func TestBasicMsgs(t *testing.T) {
 }
 
 func TestMsgBuyName(t *testing.T) {
-	ctx, handler := CreateTestHandler()
-	buyerAcc, err := sdk.AccAddressFromBech32(types.TestAddress)
-
-	require.NoError(t, err)
-	require.NotNil(t, buyerAcc)
 
 	bid := sdk.Coins{sdk.NewInt64Coin(tokenName, 0)}
 	msg := types.NewMsgBuyName("mehdi", bid, buyerAcc)
-
-	err = msg.ValidateBasic()
+	err := msg.ValidateBasic()
 	require.Error(t, err)
 
 	bid = sdk.Coins{sdk.NewInt64Coin(tokenName, 2)}
@@ -40,6 +37,7 @@ func TestMsgBuyName(t *testing.T) {
 	res, err := handler(ctx, msg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
+	t.Log(buyerAcc)
 
 	// for _, event := range res.Events {
 	// 	for _, attribute := range event.Attributes {
@@ -67,17 +65,20 @@ func TestMsgBuyName(t *testing.T) {
 
 }
 
-// func TestMsgSetName(t *testing.T) {
-// 	ctx, handler := CreateTestHandler()
-// 	buyerAcc, err := sdk.AccAddressFromBech32(types.TestAddress)
-// 	require.NoError(t, err)
+func TestMsgSetName(t *testing.T) {
 
-// 	msg := types.NewMsgSetName(buyerAcc, "mehdi", "mehdiname")
-// 	t.Log(buyerAcc.String())
-// 	err = msg.ValidateBasic()
-// 	require.NoError(t, err)
+	msg := types.NewMsgSetName(buyerAcc, "mehdiplus", "mehdiname")
+	err := msg.ValidateBasic()
+	require.NoError(t, err)
 
-// 	_, err = handler(ctx, msg)
-// 	require.Error(t, err)
-// 	//require.Nil(t, res)
-// }
+	_, err = handler(ctx, msg)
+	require.Error(t, err)
+
+	msg = types.NewMsgSetName(buyerAcc, "mehdi", "mehdiname")
+	err = msg.ValidateBasic()
+	require.NoError(t, err)
+
+	_, err = handler(ctx, msg)
+	require.NoError(t, err)
+	//require.Nil(t, res)
+}

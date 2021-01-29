@@ -73,7 +73,7 @@ type NewApp struct {
 
 	subspaces map[string]params.Subspace
 
-	accountKeeper     auth.AccountKeeper
+	AccountKeeper     auth.AccountKeeper
 	BankKeeper        bank.Keeper
 	stakingKeeper     staking.Keeper
 	supplyKeeper      supply.Keeper
@@ -123,7 +123,7 @@ func NewInitApp(
 	app.subspaces[bank.ModuleName] = app.paramsKeeper.Subspace(bank.DefaultParamspace)
 	app.subspaces[staking.ModuleName] = app.paramsKeeper.Subspace(staking.DefaultParamspace)
 
-	app.accountKeeper = auth.NewAccountKeeper(
+	app.AccountKeeper = auth.NewAccountKeeper(
 		app.cdc,
 		keys[auth.StoreKey],
 		app.subspaces[auth.ModuleName],
@@ -131,7 +131,7 @@ func NewInitApp(
 	)
 
 	app.BankKeeper = bank.NewBaseKeeper(
-		app.accountKeeper,
+		app.AccountKeeper,
 		app.subspaces[bank.ModuleName],
 		app.ModuleAccountAddrs(),
 	)
@@ -139,7 +139,7 @@ func NewInitApp(
 	app.supplyKeeper = supply.NewKeeper(
 		app.cdc,
 		keys[supply.StoreKey],
-		app.accountKeeper,
+		app.AccountKeeper,
 		app.BankKeeper,
 		maccPerms,
 	)
@@ -164,12 +164,12 @@ func NewInitApp(
 	// this line is used by starport scaffolding # 4
 
 	app.mm = module.NewManager(
-		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
-		auth.NewAppModule(app.accountKeeper),
-		bank.NewAppModule(app.BankKeeper, app.accountKeeper),
-		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
+		genutil.NewAppModule(app.AccountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
+		auth.NewAppModule(app.AccountKeeper),
+		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
+		supply.NewAppModule(app.supplyKeeper, app.AccountKeeper),
 		nameservice.NewAppModule(app.nameserviceKeeper, app.BankKeeper),
-		staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
+		staking.NewAppModule(app.stakingKeeper, app.AccountKeeper, app.supplyKeeper),
 		// this line is used by starport scaffolding # 6
 	)
 
@@ -193,7 +193,7 @@ func NewInitApp(
 
 	app.SetAnteHandler(
 		auth.NewAnteHandler(
-			app.accountKeeper,
+			app.AccountKeeper,
 			app.supplyKeeper,
 			auth.DefaultSigVerificationGasConsumer,
 		),
