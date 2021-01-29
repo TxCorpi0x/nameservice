@@ -80,5 +80,22 @@ func TestMsgSetName(t *testing.T) {
 
 	_, err = handler(ctx, msg)
 	require.NoError(t, err)
-	//require.Nil(t, res)
+}
+
+func TestMsgDeleteName(t *testing.T) {
+
+	msg := types.NewMsgDeleteName("mehdiplus", buyerAcc)
+	err := msg.ValidateBasic()
+	require.NoError(t, err)
+
+	_, err = handler(ctx, msg)
+	require.Error(t, err)
+
+	msg = types.NewMsgDeleteName("mehdi", buyerAcc)
+	err = msg.ValidateBasic()
+	require.NoError(t, err)
+
+	_, err = handler(ctx, msg)
+	require.NoError(t, err)
+
 }

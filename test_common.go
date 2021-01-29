@@ -21,9 +21,10 @@ var (
 	testStoreKey = "params"
 )
 
+// CreateTestHandler is the main Test Handler instance generator
 func CreateTestHandler(t *testing.T) (sdk.Context, sdk.AccAddress, sdk.Handler) {
 
-	nApp, cdc := Setup(false) //simapp.Setup(false)
+	nApp, cdc := SetupApp(false) //simapp.Setup(false)
 	ctx := nApp.BaseApp.NewContext(false, abci.Header{Height: nApp.LastBlockHeight()})
 
 	initCoins := sdk.TokensFromConsensusPower(100)
@@ -41,7 +42,8 @@ func CreateTestHandler(t *testing.T) (sdk.Context, sdk.AccAddress, sdk.Handler) 
 	return ctx, buyerAcc, handler
 }
 
-func Setup(isCheckTx bool) (*app.NewApp, *codec.Codec) {
+// SetupApp creates application instance that simulate real initiation
+func SetupApp(isCheckTx bool) (*app.NewApp, *codec.Codec) {
 	nApp, cdc, genesisState := setup(!isCheckTx, 5)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
@@ -54,7 +56,7 @@ func Setup(isCheckTx bool) (*app.NewApp, *codec.Codec) {
 		nApp.InitChain(
 			abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: DefaultConsensusParams,
+				ConsensusParams: defaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			},
 		)
@@ -63,7 +65,7 @@ func Setup(isCheckTx bool) (*app.NewApp, *codec.Codec) {
 	return nApp, cdc
 }
 
-var DefaultConsensusParams = &abci.ConsensusParams{
+var defaultConsensusParams = &abci.ConsensusParams{
 	Block: &abci.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
