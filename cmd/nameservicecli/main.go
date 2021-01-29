@@ -23,7 +23,7 @@ import (
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/vjdmhd/nameservice/app"
+	"github.com/cosmos/sdk-tutorials/nameservice/nameservice/app"
 	// this line is used by starport scaffolding
 )
 

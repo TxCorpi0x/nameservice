@@ -1,5 +1,5 @@
 package types
 
 var (
-	TestAddress = "buyer_acc"
+	TestAddress = "buyer_addr"
 )

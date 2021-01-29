@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
+
 	"github.com/vjdmhd/nameservice/x/nameservice"
 	nameservicekeeper "github.com/vjdmhd/nameservice/x/nameservice/keeper"
 	nameservicetypes "github.com/vjdmhd/nameservice/x/nameservice/types"
@@ -67,7 +68,7 @@ type NewApp struct {
 
 	invCheckPeriod uint
 
-	keys  map[string]*sdk.KVStoreKey
+	Keys  map[string]*sdk.KVStoreKey
 	tKeys map[string]*sdk.TransientStoreKey
 
 	subspaces map[string]params.Subspace
@@ -112,7 +113,7 @@ func NewInitApp(
 		BaseApp:        bApp,
 		cdc:            cdc,
 		invCheckPeriod: invCheckPeriod,
-		keys:           keys,
+		Keys:           keys,
 		tKeys:          tKeys,
 		subspaces:      make(map[string]params.Subspace),
 	}
@@ -202,7 +203,7 @@ func NewInitApp(
 	app.MountTransientStores(tKeys)
 
 	if loadLatest {
-		err := app.LoadLatestVersion(app.keys[bam.MainStoreKey])
+		err := app.LoadLatestVersion(app.Keys[bam.MainStoreKey])
 		if err != nil {
 			tmos.Exit(err.Error())
 		}
@@ -234,7 +235,7 @@ func (app *NewApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 }
 
 func (app *NewApp) LoadHeight(height int64) error {
-	return app.LoadVersion(height, app.keys[bam.MainStoreKey])
+	return app.LoadVersion(height, app.Keys[bam.MainStoreKey])
 }
 
 func (app *NewApp) ModuleAccountAddrs() map[string]bool {

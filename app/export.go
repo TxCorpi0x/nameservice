@@ -90,7 +90,7 @@ func (app *NewApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []str
 
 	// Iterate through validators by power descending, reset bond heights, and
 	// update bond intra-tx counters.
-	store := ctx.KVStore(app.keys[staking.StoreKey])
+	store := ctx.KVStore(app.Keys[staking.StoreKey])
 	iter := sdk.KVStoreReversePrefixIterator(store, staking.ValidatorsKey)
 	counter := int16(0)
 
