@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/vjdmhd/nameservice/x/nameservice/keeper"
 	"github.com/vjdmhd/nameservice/x/nameservice/types"
 )
 
@@ -13,11 +14,14 @@ var (
 	tokenName = "stake"
 	ctx       sdk.Context
 	handler   sdk.Handler
+	k         keeper.Keeper
 	buyerAcc  sdk.AccAddress
+	buyer2Acc sdk.AccAddress
 )
 
+// TestBasicMsgs tests general validation of test message to ensure the message send/receive functionality
 func TestBasicMsgs(t *testing.T) {
-	ctx, buyerAcc, handler = CreateTestHandler(t)
+	ctx, buyerAcc, buyer2Acc, handler, k = CreateTestHandler(t)
 	//Unrecognized type
 	res, err := handler(ctx, sdk.NewTestMsg())
 	require.Error(t, err)
@@ -25,72 +29,125 @@ func TestBasicMsgs(t *testing.T) {
 	require.True(t, strings.Contains(err.Error(), "unrecognized nameservice message type: "))
 }
 
+// TestMsgBuyName tests all possible validation and logical possibilities MsgBuyName
 func TestMsgBuyName(t *testing.T) {
 
-	bid := sdk.Coins{sdk.NewInt64Coin(tokenName, 0)}
-	msg := types.NewMsgBuyName("mehdi", bid, buyerAcc)
+	//*** Validate Basic Test ***\\
+	// Test if the empty name impossible
+	bid := sdk.Coins{sdk.NewInt64Coin(tokenName, 1)}
+	msg := types.NewMsgBuyName("", bid, buyerAcc)
 	err := msg.ValidateBasic()
 	require.Error(t, err)
 
+	// Test if the empty buyer be impossible
+	bid = sdk.Coins{sdk.NewInt64Coin(tokenName, 1)}
+	msg = types.NewMsgBuyName("Mehdi", bid, nil)
+	err = msg.ValidateBasic()
+	require.Error(t, err)
+
+	// Test if nil bid be impossible
+	msg = types.NewMsgBuyName("Mehdi", nil, buyer2Acc)
+	err = msg.ValidateBasic()
+	require.Error(t, err)
+
+	// Test if insufficient funds be impossible
+	msg = types.NewMsgBuyName("Mehdi", sdk.Coins{}, buyer2Acc)
+	err = msg.ValidateBasic()
+	require.Error(t, err)
+
+	//*** Handler logics Test ***\\
+	// Test if the lower bid be impossible. The initial price of a name is 1 so the zero should raise error.
+	bid = sdk.Coins{sdk.NewInt64Coin(tokenName, 0)}
+	msg = types.NewMsgBuyName("mehdi", bid, buyerAcc)
+	err = msg.ValidateBasic()
+	require.Error(t, err)
+
+	// Test if the correct info be possible
 	bid = sdk.Coins{sdk.NewInt64Coin(tokenName, 2)}
 	msg = types.NewMsgBuyName("mehdi", bid, buyerAcc)
 	res, err := handler(ctx, msg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	t.Log(buyerAcc)
 
-	// for _, event := range res.Events {
-	// 	for _, attribute := range event.Attributes {
-	// 		value := string(attribute.Value)
-	// 		switch key := string(attribute.Key); key {
-	// 		case "module":
-	// 			require.Equal(t, value, types.ModuleName)
-	// 		case "cosmos_receiver":
-	// 			require.Equal(t, value, types.TestAddress)
-	// 		case "amount":
-	// 			require.Equal(t, value, strconv.FormatInt(types.TestCoinsAmount, 10))
-	// 		case "symbol":
-	// 			require.Equal(t, value, types.TestCoinsSymbol)
-	// 		case "token_contract_address":
-	// 			require.Equal(t, value, types.TestTokenContractAddress)
-	// 		case statusString:
-	// 			require.Equal(t, value, oracle.StatusTextToString[oracle.PendingStatusText])
-	// 		case "claim_type":
-	// 			require.Equal(t, value, types.ClaimTypeToString[types.LockText])
-	// 		default:
-	// 			require.Fail(t, fmt.Sprintf("unrecognized event %s", key))
-	// 		}
-	// 	}
-	// }
+	// Test if the name belongs to new owner
+	nameOnwer := k.GetOwner(ctx, "mehdi")
+	require.Equal(t, nameOnwer, buyerAcc)
+	require.NotEqual(t, nameOnwer, buyer2Acc)
+
+	// Test if Price is set according to bid
+	namePrice := k.GetPrice(ctx, "mehdi")
+	require.True(t, namePrice.IsEqual(bid))
 
 }
 
+// TestMsgSetName tests all possible validation and logical possibilities MsgSetName
 func TestMsgSetName(t *testing.T) {
 
-	msg := types.NewMsgSetName(buyerAcc, "mehdiplus", "mehdiname")
+	//*** Validate Basic Test ***\\
+	// Test if the empty buyer be impossible
+	msg := types.NewMsgSetName(nil, "mehdi", "mehdiname")
 	err := msg.ValidateBasic()
+	require.Error(t, err)
+
+	// Test if the empty name be impossible
+	msg = types.NewMsgSetName(buyerAcc, "", "mehdiname")
+	err = msg.ValidateBasic()
+	require.Error(t, err)
+
+	// Test if the empty value be impossible
+	msg = types.NewMsgSetName(buyerAcc, "mehdi", "")
+	err = msg.ValidateBasic()
+	require.Error(t, err)
+
+	//*** Handler logics Test ***\\
+	// Test if the wrong owner of name be impossible
+	msg = types.NewMsgSetName(buyerAcc, "mehdiplus", "mehdiname")
+	err = msg.ValidateBasic()
 	require.NoError(t, err)
 
 	_, err = handler(ctx, msg)
 	require.Error(t, err)
 
+	// Test if correct parameters be possible to set
 	msg = types.NewMsgSetName(buyerAcc, "mehdi", "mehdiname")
 	err = msg.ValidateBasic()
 	require.NoError(t, err)
 
 	_, err = handler(ctx, msg)
 	require.NoError(t, err)
+
+	// Test if the value of the name is set corrcetly
+	nameToResolve := k.ResolveName(ctx, "mehdi")
+	require.Equal(t, nameToResolve, "mehdiname")
 }
 
+// TestMsgSetName tests all possible validation and logical possibilities of the MsgDeleteName
 func TestMsgDeleteName(t *testing.T) {
 
-	msg := types.NewMsgDeleteName("mehdiplus", buyerAcc)
+	//*** Validate Basic Test ***\\
+	// Test if the empty buyer be impossible
+	msg := types.NewMsgDeleteName("mehdi", nil)
 	err := msg.ValidateBasic()
+	require.Error(t, err)
+
+	//*** Handler logics Test ***\\
+	// Test if unavailable name can not be deleted.
+	msg = types.NewMsgDeleteName("mehdiplus", buyerAcc)
+	err = msg.ValidateBasic()
 	require.NoError(t, err)
 
 	_, err = handler(ctx, msg)
 	require.Error(t, err)
 
+	// Test if deleting the be impossible by incorrect owner
+	msg = types.NewMsgDeleteName("mehdi", buyer2Acc)
+	err = msg.ValidateBasic()
+	require.NoError(t, err)
+
+	_, err = handler(ctx, msg)
+	require.Error(t, err)
+
+	// Test if corrcet parameters works
 	msg = types.NewMsgDeleteName("mehdi", buyerAcc)
 	err = msg.ValidateBasic()
 	require.NoError(t, err)
@@ -98,4 +155,6 @@ func TestMsgDeleteName(t *testing.T) {
 	_, err = handler(ctx, msg)
 	require.NoError(t, err)
 
+	// Test if the name is deleted successfully
+	require.False(t, k.Exists(ctx, "mehdi"))
 }

@@ -1,3 +1,6 @@
+// test_common has functions needed by test functions as a factory
+// we should create it in the root of project because of recursive import happening while initializing the newApp instance inside x/namespace
+
 package nameservicetest
 
 import (
@@ -22,24 +25,34 @@ var (
 )
 
 // CreateTestHandler is the main Test Handler instance generator
-func CreateTestHandler(t *testing.T) (sdk.Context, sdk.AccAddress, sdk.Handler) {
+func CreateTestHandler(t *testing.T) (sdk.Context, sdk.AccAddress, sdk.AccAddress, sdk.Handler, keeper.Keeper) {
 
-	nApp, cdc := SetupApp(false) //simapp.Setup(false)
+	nApp, cdc := SetupApp(false)
 	ctx := nApp.BaseApp.NewContext(false, abci.Header{Height: nApp.LastBlockHeight()})
 
-	initCoins := sdk.TokensFromConsensusPower(100)
-
+	//get auto-generated accounts
 	allAcc := nApp.AccountKeeper.GetAllAccounts(ctx)
+
+	// set first as buyer 1
 	buyerAcc := allAcc[0].GetAddress()
-	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initCoins))
+	// make buyer 1 rich!
+	buyerAccCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(100)))
 
-	nApp.BankKeeper.AddCoins(ctx, buyerAcc, totalSupply)
+	// set second as buyer 2
+	buyer2Acc := allAcc[1].GetAddress()
+	// make buyer 2 poor!
+	buyer2AccCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(0)))
 
-	//app.BankKeeper.SetParams(ctx, types.DefaultParams())
+	// initialize keeper
 	k := keeper.NewKeeper(nApp.BankKeeper, cdc, nApp.Keys[bam.MainStoreKey])
-	k.CoinKeeper.SetCoins(ctx, buyerAcc, totalSupply)
+
+	// set account coins
+	k.CoinKeeper.SetCoins(ctx, buyerAcc, buyerAccCoins)
+	k.CoinKeeper.SetCoins(ctx, buyer2Acc, buyer2AccCoins)
+
+	// initialize handler
 	handler := nameservice.NewHandler(k)
-	return ctx, buyerAcc, handler
+	return ctx, buyerAcc, buyer2Acc, handler, k
 }
 
 // SetupApp creates application instance that simulate real initiation
@@ -65,6 +78,7 @@ func SetupApp(isCheckTx bool) (*app.NewApp, *codec.Codec) {
 	return nApp, cdc
 }
 
+// copied form simapp
 var defaultConsensusParams = &abci.ConsensusParams{
 	Block: &abci.BlockParams{
 		MaxBytes: 200000,
@@ -83,19 +97,14 @@ var defaultConsensusParams = &abci.ConsensusParams{
 }
 
 func setup(withGenesis bool, invCheckPeriod uint) (*app.NewApp, *codec.Codec, app.GenesisState) {
+	// initialize tendermint DB
 	db := dbm.NewMemDB()
+	// make app codec
 	encCdc := app.MakeCodec()
+	// init newApp instance ready for testing
 	nApp := app.NewInitApp(log.NewNopLogger(), db, nil, true, invCheckPeriod, func(*bam.BaseApp) {})
 	if withGenesis {
 		return nApp, encCdc, app.NewDefaultGenesisState()
 	}
 	return nApp, encCdc, app.GenesisState{}
-}
-
-// EmptyAppOptions is a stub implementing AppOptions
-type EmptyAppOptions struct{}
-
-// Get implements AppOptions
-func (ao EmptyAppOptions) Get(o string) interface{} {
-	return nil
 }

@@ -71,7 +71,13 @@ ENV GO111MODULE=auto
 
 RUN curl https://get.starport.network/starport@v0.13.2! | bash
 
+RUN mkdir -p /go/src/github.com/vjdmhd/nameservice
+RUN chown -R USERNAME /go/src/github.com/vjdmhd/nameservice
+RUN cd /go/src/github.com/vjdmhd
 RUN starport app github.com/vjdmhd/nameservice --sdk-version="launchpad"
+RUN chown -R USERNAME /go/src/github.com/vjdmhd/nameservice
+RUN cd ~
+
 
 
 
