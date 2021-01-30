@@ -72,39 +72,10 @@ ENV GO111MODULE=auto
 RUN curl https://get.starport.network/starport@v0.13.2! | bash
 
 RUN mkdir -p /go/src/github.com/vjdmhd/nameservice
-RUN chown -R USERNAME /go/src/github.com/vjdmhd/nameservice
-RUN cd /go/src/github.com/vjdmhd
-RUN starport app github.com/vjdmhd/nameservice --sdk-version="launchpad"
-RUN chown -R USERNAME /go/src/github.com/vjdmhd/nameservice
-RUN cd ~
-
-
 
 
 # [Optional] Uncomment the next line to use go get to install anything else you need
 # RUN go get -x github.com/gorilla/mux
-# RUN go get -x github.com/spf13/cobra
-# RUN go get -x github.com/tendermint/tendermint/abci/types
-# RUN go get -x github.com/cosmos/cosmos-sdk/client
-# #/context
-# #RUN go get -x github.com/cosmos/cosmos-sdk/codec
-# #RUN go get -x github.com/cosmos/cosmos-sdk/types
-# #RUN go get -x github.com/cosmos/cosmos-sdk/types/module
-# #RUN go get -x github.com/cosmos/cosmos-sdk/x/bank
-# RUN go get -x github.com/vjdmhd/nameservice/x/nameservice/client/cli
-# RUN go get -x github.com/vjdmhd/nameservice/x/nameservice/client/rest
-# RUN go get -x github.com/vjdmhd/nameservice/x/nameservice/keeper
-# RUN go get -x github.com/vjdmhd/nameservice/x/nameservice/types
-
-# go get - u github.com/cosmos/cosmos-sdk 
-# 	github.com/golang/mock 
-# 	github.com/gorilla/mux
-# 	github.com/spf13/afero 
-# 	github.com/spf13/cobra 
-# 	github.com/spf13/viper 
-# 	github.com/tendermint/go-amino
-# 	github.com/tendermint/tendermint
-# 	github.com/tendermint/tm-db
 
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update \
