@@ -47,7 +47,7 @@ A list of user accounts created during genesis of your application.
 ## Testing
 To use testing functions issue this command at the root of repo:
 ```
-go test
+go test -v
 ```
 
 ## Version compatibility

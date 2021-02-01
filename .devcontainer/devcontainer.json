@@ -24,7 +24,7 @@
 	"forwardPorts": [9000],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "RUN chown -R USERNAME /go/src/github.com/vjdmhd/nameservice",
+	//"postCreateCommand": "chown -R USERNAME /go/src/github.com/vjdmhd/nameservice",
 
 	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "vscode",
